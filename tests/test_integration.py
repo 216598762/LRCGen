@@ -318,6 +318,45 @@ class TestEndToEndEdgeCases:
         assert metadata.is_complete is True
         assert metadata.search_query == "Test Artist Test Song"
 
+    def test_metadata_extraction_failure(self, tagged_mp3):
+        """Handle case when metadata extraction raises an exception."""
+        with patch("lrcgen.cli.extract_metadata", side_effect=Exception("Corrupt file")):
+            from lrcgen.cli import process_audio_file
+
+            success = process_audio_file(
+                audio_path=tagged_mp3,
+                model_size="tiny",
+                device="cpu",
+                genius_token=None,
+                output_dir=None,
+                force=True,
+                language=None,
+            )
+
+        assert success is False
+        # No LRC file should be created
+        assert not tagged_mp3.with_suffix(".lrc").exists()
+
+    def test_whisper_exception(self, tagged_mp3):
+        """Handle case when Whisper transcription raises an exception."""
+        with patch("lrcgen.cli.search_lyrics", return_value=None), \
+             patch("lrcgen.cli.transcribe_audio", side_effect=RuntimeError("Model load failed")):
+            from lrcgen.cli import process_audio_file
+
+            success = process_audio_file(
+                audio_path=tagged_mp3,
+                model_size="tiny",
+                device="cpu",
+                genius_token=None,
+                output_dir=None,
+                force=True,
+                language=None,
+            )
+
+        assert success is False
+        # No LRC file should be created
+        assert not tagged_mp3.with_suffix(".lrc").exists()
+
 
 class TestEndToEndLRCContent:
     """Integration test verifying LRC file format and content."""
