@@ -28,22 +28,6 @@ def sample_metadata():
     )
 
 
-@pytest.fixture
-def mock_lrclib_response():
-    """Return a mock LRCLib API response."""
-    return [
-        {
-            "id": 12345,
-            "trackName": "Bohemian Rhapsody",
-            "artistName": "Queen",
-            "albumName": "A Night at the Opera",
-            "duration": 354,
-            "syncedLyrics": "[00:00.00]Is this the real life?\n[00:03.50]Is this just fantasy?",
-            "plainLyrics": "Is this the real life?\nIs this just fantasy?",
-        }
-    ]
-
-
 class TestLyricsResult:
     """Tests for LyricsResult dataclass."""
 
@@ -77,11 +61,22 @@ class TestLyricsResult:
 class TestSearchLrclib:
     """Tests for search_lrclib function."""
 
-    def test_successful_search(self, sample_metadata, mock_lrclib_response):
+    def test_successful_search(self, sample_metadata):
         """Return LyricsResult when LRCLib finds results."""
+        mock_response_data = [
+            {
+                "id": 12345,
+                "trackName": "Bohemian Rhapsody",
+                "artistName": "Queen",
+                "albumName": "A Night at the Opera",
+                "duration": 354,
+                "syncedLyrics": "[00:00.00]Is this the real life?\n[00:03.50]Is this just fantasy?",
+                "plainLyrics": "Is this the real life?\nIs this just fantasy?",
+            }
+        ]
         with patch("lrcgen.lyrics_search.requests.get") as mock_get:
             mock_response = MagicMock()
-            mock_response.json.return_value = mock_lrclib_response
+            mock_response.json.return_value = mock_response_data
             mock_response.raise_for_status.return_value = None
             mock_get.return_value = mock_response
 
@@ -94,6 +89,7 @@ class TestSearchLrclib:
             assert "[00:00.00]" in result.synced_lyrics
             assert result.title == "Bohemian Rhapsody"
             assert result.artist == "Queen"
+            mock_response.raise_for_status.assert_called_once()
 
     def test_no_results(self, sample_metadata):
         """Return None when LRCLib returns empty results."""
@@ -206,9 +202,9 @@ class TestSearchGenius:
             result = search_genius(sample_metadata, genius_token="test_token")
             assert result is None
 
-    def test_lyricsgenius_not_installed(self, sample_metadata):
-        """Return None when lyricsgenius is not installed."""
-        with patch.dict("sys.modules", {"lyricsgenius": None}):
+    def test_lyricsgenius_import_error(self, sample_metadata):
+        """Return None when lyricsgenius import fails."""
+        with patch("builtins.__import__", side_effect=ImportError("No module named 'lyricsgenius'")):
             result = search_genius(sample_metadata, genius_token="test_token")
             assert result is None
 
