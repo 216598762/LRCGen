@@ -16,15 +16,6 @@ def runner():
     return CliRunner()
 
 
-@pytest.fixture
-def audio_dir(create_minimal_mp3):
-    """Create a temporary directory with audio files for testing."""
-    # create_minimal_mp3 uses tmp_dir from conftest, so files are in that dir
-    # We need to return that same directory path
-    filepath = create_minimal_mp3("test.mp3")
-    return filepath.parent
-
-
 class TestFindAudioFiles:
     """Tests for find_audio_files helper function."""
 
