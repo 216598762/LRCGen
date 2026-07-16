@@ -5,6 +5,12 @@ All notable changes to LRCGen will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-07-16
+
+### Fixed
+- Python 3.10 CI compatibility: Skip lyricsgenius tests on Python <3.11 due to `Self` type hint incompatibility
+- All tests now pass on Python 3.10, 3.11, 3.12, and 3.13
+
 ## [1.0.0] - 2026-07-16
 
 ### Added
