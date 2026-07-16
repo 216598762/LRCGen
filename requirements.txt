@@ -1,0 +1,6 @@
+mutagen>=1.47.0
+requests>=2.31.0
+faster-whisper>=1.0.0
+lyricsgenius>=1.4.0
+rich>=13.0.0
+click>=8.1.0

@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lrcgen"
+version = "0.1.0"
+description = "Generate synchronized .LRC lyric files using LRCLib, Genius, and FasterWhisper"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "mutagen>=1.47.0",
+    "requests>=2.31.0",
+    "faster-whisper>=1.0.0",
+    "lyricsgenius>=1.4.0",
+    "rich>=13.0.0",
+    "click>=8.1.0",
+]
+
+[project.scripts]
+lrcgen = "lrcgen.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "ruff",
+]
+
+[tool.setuptools.packages.find]
+include = ["lrcgen*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
