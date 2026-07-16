@@ -10,6 +10,9 @@ Generate synchronized `.LRC` lyric files for your audio collection using AI-powe
 - **Wide format support**: MP3, FLAC, OGG, M4A, WAV, and many more
 - **Batch processing**: Process entire directories recursively
 - **Sidecar output**: LRC files created next to audio files automatically
+- **Time offset**: Adjust all timestamps by a global offset
+- **Flexible filtering**: Include/exclude files with glob patterns
+- **Dry run mode**: Preview what would be done without processing
 
 ## Installation
 
@@ -36,41 +39,176 @@ lrcgen /path/to/music/
 lrcgen . --no-recursive
 ```
 
-### Options
+### All Options
 
-```bash
-lrcgen --help
+```
+Usage: lrcgen [OPTIONS] PATH
+
+  LRCGen - Generate synchronized .LRC lyric files.
+
+  PATH can be a single audio file or a directory to scan.
+
+  Examples:
+    lrcgen song.mp3
+    lrcgen /path/to/music/ --model-size medium --device cuda
+    lrcgen music/ --dry-run --verbose
+    lrcgen music/ --skip-whisper --genius-only
 
 Options:
-  -o, --output-dir PATH     Output directory for LRC files
-  -m, --model-size TEXT     Whisper model size (tiny/base/small/medium/large-v3)
-                             [default: small]
-  -d, --device TEXT         Device for Whisper (cpu/cuda) [default: cpu]
-  --genius-token TEXT       Genius API token (or set GENIUS_ACCESS_TOKEN env var)
-  -r, --recursive/--no-recursive
-                             Recursively scan directories [default: recursive]
-  -f, --force               Force regeneration of existing LRC files
-  -l, --language TEXT       Language code for Whisper (e.g., en, es)
-  -v, --verbose             Enable verbose logging
+  -o, --output-dir PATH            Output directory for LRC files.
+  -m, --model-size TEXT            Whisper model size (tiny, base, small, medium,
+                                   large-v3).  [default: small]
+  -d, --device TEXT                Device for Whisper (cpu, cuda, auto).
+                                   [default: cpu]
+  --genius-token TEXT              Genius API token (or set GENIUS_ACCESS_TOKEN
+                                   env var).
+  -r, --recursive/--no-recursive   Recursively scan directories.
+                                   [default: recursive]
+  -f, --force                      Force regeneration of existing LRC files.
+  -l, --language TEXT              Language code for Whisper (e.g., en, es, ja).
+                                   Auto-detect if not set.
+  -v, --verbose                    Enable verbose debug logging.
+  -q, --quiet                      Suppress output except errors.
+  --dry-run                        Preview what would be done without processing
+                                   files.
+  --skip-whisper                   Skip Whisper transcription (only use online
+                                   lyrics).
+  --skip-lyrics                    Skip lyrics search (only use Whisper
+                                   transcription).
+  --lrclib-only                    Only search LRCLib (skip Genius fallback).
+  --genius-only                    Only search Genius (skip LRCLib).
+  --offset INTEGER                 Global time offset in milliseconds (positive
+                                   delays, negative advances).  [default: 0]
+  --no-metadata                    Don't include metadata tags (title, artist,
+                                   album) in LRC.
+  --beam-size INTEGER              Whisper beam size for transcription.
+                                   [default: 5]
+  --compute-type [int8|float16|float32]
+                                   Whisper compute type (int8=fast, float16=gpu,
+                                   float32=best quality).  [default: int8]
+  --extensions TEXT                 Comma-separated audio extensions to include
+                                   (default: all supported).
+  --exclude TEXT                   Glob patterns to exclude (can be specified
+                                   multiple times).
+  --include TEXT                   Glob patterns to include (can be specified
+                                   multiple times).
+  --threads INTEGER                Number of parallel processing threads
+                                   (experimental).  [default: 1]
+  --version                        Show version and exit.
+  --no-color                       Disable colored output.
+  --help                           Show this message and exit.
 ```
 
 ### Examples
+
+#### Basic Processing
+
+```bash
+# Process a single file
+lrcgen song.mp3
+
+# Process a directory
+lrcgen /path/to/music/
+
+# Process current directory non-recursively
+lrcgen . --no-recursive
+```
+
+#### Whisper Configuration
 
 ```bash
 # Use a larger model for better accuracy
 lrcgen music/ --model-size medium
 
-# Use GPU acceleration
-lrcgen music/ --device cuda
+# Use GPU acceleration with float16
+lrcgen music/ --device cuda --compute-type float16
+
+# Use best quality (slower)
+lrcgen music/ --compute-type float32
+
+# Set beam size for better accuracy
+lrcgen music/ --beam-size 10
+
+# Specify language for better recognition
+lrcgen music/ --language ja
+```
+
+#### Lyrics Source Control
+
+```bash
+# Only use LRCLib (skip Genius)
+lrcgen music/ --lrclib-only
+
+# Only use Genius (skip LRCLib)
+lrcgen music/ --genius-only --genius-token YOUR_TOKEN
+
+# Skip Whisper, only use online lyrics
+lrcgen music/ --skip-whisper
+
+# Skip lyrics search, only use Whisper transcription
+lrcgen music/ --skip-lyrics
+```
+
+#### Output Control
+
+```bash
+# Output to a specific directory
+lrcgen music/ -o lrc_output/
 
 # Force regenerate all LRC files
 lrcgen music/ --force
 
-# Output to a specific directory
-lrcgen music/ -o lrc_output/
+# Apply time offset (delay all lyrics by 500ms)
+lrcgen music/ --offset 500
 
-# With Genius API token for fallback lyrics
-lrcgen music/ --genius-token YOUR_TOKEN
+# Apply negative offset (advance all lyrics by 200ms)
+lrcgen music/ --offset -200
+
+# Create LRC without metadata tags
+lrcgen music/ --no-metadata
+```
+
+#### File Filtering
+
+```bash
+# Only process MP3 and FLAC files
+lrcgen music/ --extensions ".mp3,.flac"
+
+# Exclude live recordings
+lrcgen music/ --exclude "*live*"
+
+# Include only files matching a pattern
+lrcgen music/ --include "*.mp3" --include "*album*"
+
+# Multiple exclude patterns
+lrcgen music/ --exclude "*.temp.*" --exclude "*test*"
+```
+
+#### Preview and Debugging
+
+```bash
+# Dry run - see what would be processed
+lrcgen music/ --dry-run
+
+# Verbose output
+lrcgen music/ --verbose
+
+# Quiet mode (only errors)
+lrcgen music/ --quiet
+
+# Disable colors
+lrcgen music/ --no-color
+
+# Show version
+lrcgen --version
+```
+
+#### Environment Variables
+
+```bash
+# Set Genius token via environment variable
+export GENIUS_ACCESS_TOKEN=your_token_here
+lrcgen music/
 ```
 
 ## How It Works
@@ -101,13 +239,21 @@ lrcgen music/ --genius-token YOUR_TOKEN
 
 ### Whisper Models
 
-| Model   | Size    | Speed   | Accuracy |
+| Model    | Size    | Speed   | Accuracy |
+|----------|---------|---------|----------|
+| tiny     | ~39MB   | Fastest | Basic    |
+| base     | ~74MB   | Fast    | Good     |
+| small    | ~244MB  | Medium  | Better   |
+| medium   | ~769MB  | Slow    | Great    |
+| large-v3 | ~1550MB | Slowest | Best     |
+
+### Compute Types
+
+| Type    | Speed   | Quality | Use Case |
 |---------|---------|---------|----------|
-| tiny    | ~39MB   | Fastest | Basic    |
-| base    | ~74MB   | Fast    | Good     |
-| small   | ~244MB  | Medium  | Better   |
-| medium  | ~769MB  | Slow    | Great    |
-| large-v3| ~1550MB | Slowest | Best     |
+| int8    | Fastest | Good    | CPU, balanced |
+| float16 | Fast    | Great   | GPU |
+| float32 | Slow    | Best    | High quality |
 
 ## Supported Audio Formats
 

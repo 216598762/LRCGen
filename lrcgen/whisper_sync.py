@@ -35,6 +35,8 @@ def transcribe_audio(
     model_size: str = "small",
     device: str = "cpu",
     language: str | None = None,
+    beam_size: int = 5,
+    compute_type: str = "int8",
 ) -> list[Segment]:
     """Transcribe audio file with word-level timestamps.
 
@@ -43,6 +45,8 @@ def transcribe_audio(
         model_size: Whisper model size (tiny, base, small, medium, large-v3).
         device: Device to run on (cpu, cuda).
         language: Optional language code (e.g., "en", "es").
+        beam_size: Beam size for decoding.
+        compute_type: Compute type (int8, float16, float32).
 
     Returns:
         List of Segment objects with word timestamps.
@@ -60,12 +64,12 @@ def transcribe_audio(
         )
 
     logger.info(f"Loading Whisper model: {model_size} on {device}")
-    model = WhisperModel(model_size, device=device, compute_type="int8")
+    model = WhisperModel(model_size, device=device, compute_type=compute_type)
 
     logger.info(f"Transcribing: {audio_path}")
     segments_gen, info = model.transcribe(
         str(audio_path),
-        beam_size=5,
+        beam_size=beam_size,
         word_timestamps=True,
         language=language,
     )

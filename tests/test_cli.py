@@ -83,6 +83,55 @@ class TestFindAudioFiles:
         names = [p.name for p in result]
         assert names == sorted(names)
 
+    def test_extensions_filter(self, create_minimal_mp3):
+        """Filter audio files by extension."""
+        mp3_file = create_minimal_mp3("song.mp3")
+        base_dir = mp3_file.parent
+
+        # Create FLAC file
+        flac_file = base_dir / "track.flac"
+        flac_file.write_bytes(b"\x66\x4c\x61\x43\x00\x00\x00\x22" + b"\x00" * 34)
+
+        # Create OGG file
+        ogg_file = base_dir / "audio.ogg"
+        ogg_file.write_bytes(b"\x4f\x67\x67\x53\x00\x02\x00\x00" + b"\x00" * 8)
+
+        # Filter only MP3
+        result = find_audio_files(base_dir, extensions=".mp3")
+        assert len(result) == 1
+        assert result[0].name == "song.mp3"
+
+        # Filter MP3 and FLAC
+        result = find_audio_files(base_dir, extensions=".mp3,.flac")
+        assert len(result) == 2
+        names = [p.name for p in result]
+        assert "song.mp3" in names
+        assert "track.flac" in names
+
+    def test_exclude_patterns(self, create_minimal_mp3):
+        """Exclude files matching patterns."""
+        create_minimal_mp3("normal.mp3")
+        create_minimal_mp3("live_concert.mp3")
+        create_minimal_mp3("remix_v2.mp3")
+        filepath = create_minimal_mp3("test.mp3")
+        base_dir = filepath.parent
+
+        result = find_audio_files(base_dir, exclude_patterns=["*live*"])
+        assert len(result) == 3
+        names = [p.name for p in result]
+        assert "live_concert.mp3" not in names
+
+    def test_include_patterns(self, create_minimal_mp3):
+        """Include only files matching patterns."""
+        create_minimal_mp3("song.mp3")
+        create_minimal_mp3("album_track.mp3")
+        filepath = create_minimal_mp3("demo.mp3")
+        base_dir = filepath.parent
+
+        result = find_audio_files(base_dir, include_patterns=["*album*"])
+        assert len(result) == 1
+        assert result[0].name == "album_track.mp3"
+
 
 class TestMainCommand:
     """Tests for the main CLI command."""
@@ -184,3 +233,135 @@ class TestMainCommand:
         filepath = create_minimal_mp3("test.mp3")
         result = runner.invoke(main, [str(filepath.parent), "--language", "en"])
         assert "Found:" in result.output
+
+    def test_version_flag(self, runner):
+        """Version flag shows version."""
+        result = runner.invoke(main, ["--version"])
+        # --version triggers sys.exit(0), Click catches it as exit_code 0
+        assert result.exit_code == 0
+        assert "0.1.0" in result.output
+
+    def test_quiet_flag(self, runner, create_minimal_mp3):
+        """Quiet flag suppresses output."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--quiet"])
+        # Should not show "Found:" message
+        assert "Found:" not in result.output
+
+    def test_dry_run_flag(self, runner, create_minimal_mp3):
+        """Dry run flag is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--dry-run"])
+        assert "DRY RUN" in result.output
+
+    def test_skip_whisper_flag(self, runner, create_minimal_mp3):
+        """Skip whisper flag is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--skip-whisper"])
+        assert "Found:" in result.output
+
+    def test_skip_lyrics_flag(self, runner, create_minimal_mp3):
+        """Skip lyrics flag is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--skip-lyrics"])
+        assert "Found:" in result.output
+
+    def test_lrclib_only_flag(self, runner, create_minimal_mp3):
+        """LRCLib only flag is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--lrclib-only"])
+        assert "Found:" in result.output
+
+    def test_genius_only_flag(self, runner, create_minimal_mp3):
+        """Genius only flag is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(
+            main,
+            [str(filepath.parent), "--genius-only", "--genius-token", "test_token"],
+        )
+        assert "Found:" in result.output
+
+    def test_offset_option(self, runner, create_minimal_mp3):
+        """Offset option is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--offset", "500"])
+        assert "Found:" in result.output
+
+    def test_negative_offset_option(self, runner, create_minimal_mp3):
+        """Negative offset option is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--offset", "-200"])
+        assert "Found:" in result.output
+
+    def test_no_metadata_flag(self, runner, create_minimal_mp3):
+        """No metadata flag is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--no-metadata"])
+        assert "Found:" in result.output
+
+    def test_beam_size_option(self, runner, create_minimal_mp3):
+        """Beam size option is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--beam-size", "10"])
+        assert "Found:" in result.output
+
+    def test_compute_type_option(self, runner, create_minimal_mp3):
+        """Compute type option is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--compute-type", "float16"])
+        assert "Found:" in result.output
+
+    def test_extensions_option(self, runner, create_minimal_mp3):
+        """Extensions option filters files."""
+        mp3_file = create_minimal_mp3("song.mp3")
+        base_dir = mp3_file.parent
+
+        # Create FLAC file
+        flac_file = base_dir / "track.flac"
+        flac_file.write_bytes(b"\x66\x4c\x61\x43\x00\x00\x00\x22" + b"\x00" * 34)
+
+        result = runner.invoke(main, [str(base_dir), "--extensions", ".mp3"])
+        assert "Found:" in result.output
+        assert "1 audio file" in result.output
+
+    def test_exclude_option(self, runner, create_minimal_mp3):
+        """Exclude option filters files."""
+        create_minimal_mp3("normal.mp3")
+        create_minimal_mp3("live_concert.mp3")
+        filepath = create_minimal_mp3("test.mp3")
+        base_dir = filepath.parent
+
+        result = runner.invoke(main, [str(base_dir), "--exclude", "*live*"])
+        assert "Found:" in result.output
+        assert "2 audio file" in result.output
+
+    def test_include_option(self, runner, create_minimal_mp3):
+        """Include option filters files."""
+        create_minimal_mp3("song.mp3")
+        create_minimal_mp3("album_track.mp3")
+        filepath = create_minimal_mp3("demo.mp3")
+        base_dir = filepath.parent
+
+        result = runner.invoke(main, [str(base_dir), "--include", "*album*"])
+        assert "Found:" in result.output
+        assert "1 audio file" in result.output
+
+    def test_no_color_flag(self, runner, create_minimal_mp3):
+        """No color flag is accepted."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--no-color"])
+        assert "Found:" in result.output
+
+    def test_conflicting_skip_flags(self, runner, create_minimal_mp3):
+        """Cannot use both skip-whisper and skip-lyrics."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--skip-whisper", "--skip-lyrics"])
+        assert result.exit_code == 1
+        assert "cannot be used together" in result.output
+
+    def test_conflicting_source_flags(self, runner, create_minimal_mp3):
+        """Cannot use both lrclib-only and genius-only."""
+        filepath = create_minimal_mp3("test.mp3")
+        result = runner.invoke(main, [str(filepath.parent), "--lrclib-only", "--genius-only"])
+        assert result.exit_code == 1
+        assert "cannot be used together" in result.output
