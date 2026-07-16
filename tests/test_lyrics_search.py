@@ -102,6 +102,34 @@ class TestSearchLrclib:
             result = search_lrclib(sample_metadata)
             assert result is None
 
+    def test_plain_lyrics_only(self, sample_metadata):
+        """Return LyricsResult with synced_lyrics=None when only plainLyrics available."""
+        mock_response_data = [
+            {
+                "id": 12345,
+                "trackName": "Bohemian Rhapsody",
+                "artistName": "Queen",
+                "albumName": "A Night at the Opera",
+                "duration": 354,
+                "syncedLyrics": None,
+                "plainLyrics": "Is this the real life?\nIs this just fantasy?",
+            }
+        ]
+        with patch("lrcgen.lyrics_search.requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.json.return_value = mock_response_data
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+
+            result = search_lrclib(sample_metadata)
+
+            assert result is not None
+            assert result.source == "lrclib"
+            assert result.lyrics == "Is this the real life?\nIs this just fantasy?"
+            assert result.synced_lyrics is None
+            assert result.title == "Bohemian Rhapsody"
+            assert result.artist == "Queen"
+
     def test_no_metadata(self):
         """Return None when no metadata is provided."""
         metadata = AudioMetadata(
