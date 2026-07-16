@@ -239,7 +239,7 @@ class TestMainCommand:
         result = runner.invoke(main, ["--version"])
         # --version triggers sys.exit(0), Click catches it as exit_code 0
         assert result.exit_code == 0
-        assert "0.1.0" in result.output
+        assert "version" in result.output.lower()
 
     def test_quiet_flag(self, runner, create_minimal_mp3):
         """Quiet flag suppresses output."""

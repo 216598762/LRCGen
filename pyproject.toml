@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lrcgen"
-version = "0.1.0"
+version = "1.0.0"
 description = "Generate synchronized .LRC lyric files using LRCLib, Genius, and FasterWhisper"
 readme = "README.md"
 license = {text = "MIT"}
