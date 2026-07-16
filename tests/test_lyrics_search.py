@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -14,6 +15,12 @@ from lrcgen.lyrics_search import (
     search_lyrics,
 )
 from lrcgen.metadata import AudioMetadata
+
+# lyricsgenius requires Python 3.11+ due to Self type hint
+requires_python311 = pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="lyricsgenius requires Python 3.11+ (uses Self from typing)",
+)
 
 
 @pytest.fixture
@@ -192,6 +199,7 @@ class TestSearchLrclib:
             assert "artist_name" not in params
 
 
+@requires_python311
 class TestSearchGenius:
     """Tests for search_genius function."""
 
