@@ -145,6 +145,7 @@ class TestSearchLrclib:
     def test_request_exception(self, sample_metadata):
         """Return None when request fails."""
         import requests
+
         with patch("lrcgen.lyrics_search.requests.get") as mock_get:
             mock_get.side_effect = requests.RequestException("Connection error")
 
@@ -206,10 +207,10 @@ class TestSearchGenius:
         mock_song.title = "Bohemian Rhapsody"
         mock_song.artist = "Queen"
 
-        with patch("lyricsgenius.Genius") as MockGenius:
+        with patch("lyricsgenius.Genius") as mock_genius_cls:
             mock_genius = MagicMock()
             mock_genius.search_song.return_value = mock_song
-            MockGenius.return_value = mock_genius
+            mock_genius_cls.return_value = mock_genius
 
             result = search_genius(sample_metadata, genius_token="test_token")
 
@@ -222,24 +223,26 @@ class TestSearchGenius:
 
     def test_no_results(self, sample_metadata):
         """Return None when Genius returns no results."""
-        with patch("lyricsgenius.Genius") as MockGenius:
+        with patch("lyricsgenius.Genius") as mock_genius_cls:
             mock_genius = MagicMock()
             mock_genius.search_song.return_value = None
-            MockGenius.return_value = mock_genius
+            mock_genius_cls.return_value = mock_genius
 
             result = search_genius(sample_metadata, genius_token="test_token")
             assert result is None
 
     def test_lyricsgenius_import_error(self, sample_metadata):
         """Return None when lyricsgenius import fails."""
-        with patch("builtins.__import__", side_effect=ImportError("No module named 'lyricsgenius'")):
+        with patch(
+            "builtins.__import__", side_effect=ImportError("No module named 'lyricsgenius'")
+        ):
             result = search_genius(sample_metadata, genius_token="test_token")
             assert result is None
 
     def test_genius_api_error(self, sample_metadata):
         """Return None when Genius API raises an error."""
-        with patch("lyricsgenius.Genius") as MockGenius:
-            MockGenius.side_effect = Exception("API Error")
+        with patch("lyricsgenius.Genius") as mock_genius_cls:
+            mock_genius_cls.side_effect = Exception("API Error")
 
             result = search_genius(sample_metadata, genius_token="test_token")
             assert result is None
@@ -256,8 +259,10 @@ class TestSearchLyrics:
             source="lrclib",
         )
 
-        with patch("lrcgen.lyrics_search.search_lrclib") as mock_lrclib, \
-             patch("lrcgen.lyrics_search.search_genius") as mock_genius:
+        with (
+            patch("lrcgen.lyrics_search.search_lrclib") as mock_lrclib,
+            patch("lrcgen.lyrics_search.search_genius") as mock_genius,
+        ):
             mock_lrclib.return_value = lrclib_result
             mock_genius.return_value = None
 
@@ -275,8 +280,10 @@ class TestSearchLyrics:
             source="genius",
         )
 
-        with patch("lrcgen.lyrics_search.search_lrclib") as mock_lrclib, \
-             patch("lrcgen.lyrics_search.search_genius") as mock_genius:
+        with (
+            patch("lrcgen.lyrics_search.search_lrclib") as mock_lrclib,
+            patch("lrcgen.lyrics_search.search_genius") as mock_genius,
+        ):
             mock_lrclib.return_value = None
             mock_genius.return_value = genius_result
 
@@ -287,8 +294,10 @@ class TestSearchLyrics:
 
     def test_no_results_anywhere(self, sample_metadata):
         """Return None when no source has lyrics."""
-        with patch("lrcgen.lyrics_search.search_lrclib") as mock_lrclib, \
-             patch("lrcgen.lyrics_search.search_genius") as mock_genius:
+        with (
+            patch("lrcgen.lyrics_search.search_lrclib") as mock_lrclib,
+            patch("lrcgen.lyrics_search.search_genius") as mock_genius,
+        ):
             mock_lrclib.return_value = None
             mock_genius.return_value = None
 
@@ -297,8 +306,10 @@ class TestSearchLyrics:
 
     def test_passes_genius_token(self, sample_metadata):
         """Pass genius_token to search_genius."""
-        with patch("lrcgen.lyrics_search.search_lrclib") as mock_lrclib, \
-             patch("lrcgen.lyrics_search.search_genius") as mock_genius:
+        with (
+            patch("lrcgen.lyrics_search.search_lrclib") as mock_lrclib,
+            patch("lrcgen.lyrics_search.search_genius") as mock_genius,
+        ):
             mock_lrclib.return_value = None
             mock_genius.return_value = None
 

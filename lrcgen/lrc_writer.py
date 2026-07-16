@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LRCLine:
     """A single line in an LRC file."""
+
     timestamp: str  # [mm:ss.xx]
     text: str
 
@@ -20,6 +21,7 @@ class LRCLine:
 @dataclass
 class LRCFile:
     """Complete LRC file content."""
+
     title: str | None = None
     artist: str | None = None
     album: str | None = None

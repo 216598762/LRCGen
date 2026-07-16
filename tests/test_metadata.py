@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 from lrcgen.metadata import (
-    AudioMetadata,
     SUPPORTED_EXTENSIONS,
+    AudioMetadata,
     extract_metadata,
     is_supported_audio,
 )

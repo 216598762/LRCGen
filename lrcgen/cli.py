@@ -11,15 +11,15 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from lrcgen.lyrics_search import search_lyrics
-from lrcgen.metadata import AudioMetadata, extract_metadata, is_supported_audio
-from lrcgen.whisper_sync import segments_to_lrc_lines, transcribe_audio
 from lrcgen.lrc_writer import (
     create_lrc_from_lines,
     create_lrc_from_plain_text,
     create_lrc_from_synced,
     write_lrc_file,
 )
+from lrcgen.lyrics_search import search_lyrics
+from lrcgen.metadata import extract_metadata, is_supported_audio
+from lrcgen.whisper_sync import segments_to_lrc_lines, transcribe_audio
 
 console = Console()
 
@@ -49,10 +49,7 @@ def find_audio_files(path: Path, recursive: bool = True) -> list[Path]:
         return [path] if is_supported_audio(path) else []
 
     pattern = "**/*" if recursive else "*"
-    return sorted(
-        p for p in path.glob(pattern)
-        if p.is_file() and is_supported_audio(p)
-    )
+    return sorted(p for p in path.glob(pattern) if p.is_file() and is_supported_audio(p))
 
 
 def process_audio_file(
@@ -104,7 +101,7 @@ def process_audio_file(
 
     if lyrics_result and lyrics_result.synced_lyrics:
         # Use synced lyrics from LRCLib directly
-        console.print(f"  [green]Found synced lyrics from LRCLib[/green]")
+        console.print("  [green]Found synced lyrics from LRCLib[/green]")
         lrc_content = create_lrc_from_synced(
             lyrics_result.synced_lyrics,
             title=metadata.title or lyrics_result.title,
@@ -114,7 +111,7 @@ def process_audio_file(
         )
     else:
         # Need to use Whisper for timestamps
-        console.print(f"  [yellow]Using Whisper for transcription...[/yellow]")
+        console.print("  [yellow]Using Whisper for transcription...[/yellow]")
         try:
             segments = transcribe_audio(audio_path, model_size, device, language)
         except Exception as e:
@@ -122,12 +119,12 @@ def process_audio_file(
             return False
 
         if not segments:
-            console.print(f"  [red]Whisper returned no segments (non-vocal audio?)[/red]")
+            console.print("  [red]Whisper returned no segments (non-vocal audio?)[/red]")
             return False
 
         if lyrics_result:
             # Align Genius lyrics with Whisper timestamps
-            console.print(f"  [green]Aligning Genius lyrics with timestamps[/green]")
+            console.print("  [green]Aligning Genius lyrics with timestamps[/green]")
             timestamps = [(s.start, s.end) for s in segments]
             lrc_content = create_lrc_from_plain_text(
                 lyrics_result.lyrics,
@@ -139,7 +136,7 @@ def process_audio_file(
             )
         else:
             # No lyrics found, use Whisper transcription directly
-            console.print(f"  [yellow]No lyrics found, using Whisper transcription[/yellow]")
+            console.print("  [yellow]No lyrics found, using Whisper transcription[/yellow]")
             timestamped_lines = segments_to_lrc_lines(segments)
             lrc_content = create_lrc_from_lines(
                 timestamped_lines,
@@ -161,8 +158,15 @@ def process_audio_file(
 
 @click.command()
 @click.argument("path", type=click.Path(exists=True, path_type=Path))
-@click.option("-o", "--output-dir", type=click.Path(path_type=Path), help="Output directory for LRC files")
-@click.option("-m", "--model-size", default="small", help="Whisper model size (tiny/base/small/medium/large-v3)")
+@click.option(
+    "-o", "--output-dir", type=click.Path(path_type=Path), help="Output directory for LRC files"
+)
+@click.option(
+    "-m",
+    "--model-size",
+    default="small",
+    help="Whisper model size (tiny/base/small/medium/large-v3)",
+)
 @click.option("-d", "--device", default="cpu", help="Device for Whisper (cpu/cuda)")
 @click.option("--genius-token", envvar="GENIUS_ACCESS_TOKEN", help="Genius API token")
 @click.option("-r", "--recursive/--no-recursive", default=True, help="Recursively scan directories")
@@ -209,7 +213,9 @@ def main(
 
         for audio_path in audio_files:
             progress.update(task, description=f"Processing {audio_path.name}")
-            if process_audio_file(audio_path, model_size, device, genius_token, output_dir, force, language):
+            if process_audio_file(
+                audio_path, model_size, device, genius_token, output_dir, force, language
+            ):
                 success += 1
             else:
                 failed += 1

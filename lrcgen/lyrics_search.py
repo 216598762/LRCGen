@@ -19,6 +19,7 @@ LRCLIB_BASE_URL = "https://lrclib.net/api"
 @dataclass
 class LyricsResult:
     """Result from a lyrics search."""
+
     lyrics: str
     synced_lyrics: str | None  # LRC formatted if available
     source: str  # "lrclib" or "genius"

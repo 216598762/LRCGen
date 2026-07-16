@@ -14,17 +14,19 @@ logger = logging.getLogger(__name__)
 @dataclass
 class WordTimestamp:
     """Timestamp for a single word."""
+
     word: str
     start: float  # seconds
-    end: float    # seconds
+    end: float  # seconds
 
 
 @dataclass
 class Segment:
     """A segment of transcribed audio."""
+
     text: str
     start: float  # seconds
-    end: float    # seconds
+    end: float  # seconds
     words: list[WordTimestamp]
 
 
@@ -68,7 +70,9 @@ def transcribe_audio(
         language=language,
     )
 
-    logger.info(f"Detected language: {info.language} (probability: {info.language_probability:.2f})")
+    logger.info(
+        f"Detected language: {info.language} (probability: {info.language_probability:.2f})"
+    )
 
     segments = []
     for seg in segments_gen:
@@ -81,12 +85,14 @@ def transcribe_audio(
             for w in (seg.words or [])
         ]
 
-        segments.append(Segment(
-            text=seg.text.strip(),
-            start=seg.start,
-            end=seg.end,
-            words=words,
-        ))
+        segments.append(
+            Segment(
+                text=seg.text.strip(),
+                start=seg.start,
+                end=seg.end,
+                words=words,
+            )
+        )
 
     logger.info(f"Transcribed {len(segments)} segments")
     return segments
@@ -106,4 +112,3 @@ def segments_to_lrc_lines(segments: list[Segment]) -> list[tuple[str, str]]:
         timestamp = format_lrc_timestamp(seg.start)
         lines.append((timestamp, seg.text))
     return lines
-

@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
-import pytest
-
 from lrcgen.lrc_writer import (
     create_lrc_from_lines,
     create_lrc_from_plain_text,

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from lrcgen.whisper_sync import Segment, WordTimestamp, segments_to_lrc_lines
 
 

@@ -61,8 +61,8 @@ def create_minimal_mp3(tmp_dir):
 
     Returns a function that creates an MP3 file with given metadata.
     """
+    from mutagen.id3 import TALB, TIT2, TPE1
     from mutagen.mp3 import MP3
-    from mutagen.id3 import TIT2, TPE1, TALB
 
     def _create_mp3(
         filename: str = "test.mp3",

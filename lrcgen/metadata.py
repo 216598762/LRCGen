@@ -7,16 +7,28 @@ from pathlib import Path
 
 from mutagen import File
 
-
 SUPPORTED_EXTENSIONS = {
-    ".mp3", ".flac", ".ogg", ".opus", ".m4a", ".aac", ".wav",
-    ".wma", ".aiff", ".ape", ".wv", ".mpc", ".tta", ".tak",
+    ".mp3",
+    ".flac",
+    ".ogg",
+    ".opus",
+    ".m4a",
+    ".aac",
+    ".wav",
+    ".wma",
+    ".aiff",
+    ".ape",
+    ".wv",
+    ".mpc",
+    ".tta",
+    ".tak",
 }
 
 
 @dataclass
 class AudioMetadata:
     """Metadata extracted from an audio file."""
+
     title: str | None
     artist: str | None
     album: str | None
@@ -77,7 +89,11 @@ def extract_metadata(file_path: Path) -> AudioMetadata:
 
     # Get duration from audio info (works regardless of easy mode)
     audio_info = File(str(file_path))
-    if audio_info is not None and hasattr(audio_info, "info") and hasattr(audio_info.info, "length"):
+    if (
+        audio_info is not None
+        and hasattr(audio_info, "info")
+        and hasattr(audio_info.info, "length")
+    ):
         duration = audio_info.info.length
 
     return AudioMetadata(
