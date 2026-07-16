@@ -92,8 +92,6 @@ Options:
                                    multiple times).
   --include TEXT                   Glob patterns to include (can be specified
                                    multiple times).
-  --threads INTEGER                Number of parallel processing threads
-                                   (experimental).  [default: 1]
   --version                        Show version and exit.
   --no-color                       Disable colored output.
   --help                           Show this message and exit.
