@@ -45,7 +45,7 @@ def search_lrclib(metadata: AudioMetadata) -> LyricsResult | None:
         if metadata.album:
             params["album_name"] = metadata.album
         if metadata.duration:
-            params["duration"] = int(metadata.duration)
+            params["duration"] = str(int(metadata.duration))
 
         if not params:
             logger.warning("No metadata available for LRCLib search")

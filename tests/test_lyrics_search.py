@@ -139,7 +139,7 @@ class TestSearchLrclib:
             assert params["track_name"] == "Bohemian Rhapsody"
             assert params["artist_name"] == "Queen"
             assert params["album_name"] == "A Night at the Opera"
-            assert params["duration"] == 354
+            assert params["duration"] == "354"
 
     def test_only_title_param(self):
         """Build params with only title when other fields missing."""
