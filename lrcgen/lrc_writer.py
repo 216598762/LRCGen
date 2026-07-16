@@ -151,7 +151,7 @@ def create_lrc_from_plain_text(
     for i, line in enumerate(lyric_lines):
         if i < len(timestamps):
             start = timestamps[i][0]
-            timestamp = _format_lrc_timestamp(start)
+            timestamp = format_lrc_timestamp(start)
             timestamped.append((timestamp, line))
         else:
             # No more timestamps, skip remaining lines
@@ -182,8 +182,15 @@ def write_lrc_file(content: str, output_path: Path) -> Path:
     return output_path
 
 
-def _format_lrc_timestamp(seconds: float) -> str:
-    """Format seconds to LRC timestamp [mm:ss.xx]."""
+def format_lrc_timestamp(seconds: float) -> str:
+    """Format seconds to LRC timestamp [mm:ss.xx].
+
+    Args:
+        seconds: Time in seconds.
+
+    Returns:
+        Formatted timestamp string like [01:23.45].
+    """
     minutes = int(seconds // 60)
     secs = seconds % 60
     return f"[{minutes:02d}:{secs:05.2f}]"

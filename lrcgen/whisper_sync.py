@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
-from lrcgen.lrc_writer import _format_lrc_timestamp
+from lrcgen.lrc_writer import format_lrc_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ def segments_to_lrc_lines(segments: list[Segment]) -> list[tuple[str, str]]:
     """
     lines = []
     for seg in segments:
-        timestamp = _format_lrc_timestamp(seg.start)
+        timestamp = format_lrc_timestamp(seg.start)
         lines.append((timestamp, seg.text))
     return lines
 

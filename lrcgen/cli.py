@@ -121,6 +121,10 @@ def process_audio_file(
             console.print(f"  [red]Whisper transcription failed:[/red] {e}")
             return False
 
+        if not segments:
+            console.print(f"  [red]Whisper returned no segments (non-vocal audio?)[/red]")
+            return False
+
         if lyrics_result:
             # Align Genius lyrics with Whisper timestamps
             console.print(f"  [green]Aligning Genius lyrics with timestamps[/green]")
