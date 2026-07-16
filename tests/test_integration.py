@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from lrcgen.cli import process_audio_file
 from lrcgen.lyrics_search import LyricsResult
 from lrcgen.metadata import extract_metadata
 from lrcgen.whisper_sync import Segment, WordTimestamp
@@ -30,6 +31,21 @@ def tagged_mp3(create_minimal_mp3):
         title="Test Song",
         artist="Test Artist",
         album="Test Album",
+    )
+
+
+@pytest.fixture
+def synced_lyrics_result():
+    """Return a sample LyricsResult with synced lyrics from LRCLib."""
+    synced_lrc = """[00:05.00]First line of lyrics
+[00:10.00]Second line of lyrics
+[00:15.00]Third line of lyrics"""
+    return LyricsResult(
+        lyrics="First line of lyrics\nSecond line of lyrics\nThird line of lyrics",
+        synced_lyrics=synced_lrc,
+        source="lrclib",
+        title="Test Song",
+        artist="Test Artist",
     )
 
 
@@ -76,23 +92,9 @@ def sample_segments():
 class TestEndToEndWithSyncedLyrics:
     """Integration test: LRCLib provides synced lyrics."""
 
-    def test_full_pipeline_synced(self, tagged_mp3, tmp_path):
+    def test_full_pipeline_synced(self, tagged_mp3, synced_lyrics_result):
         """Process MP3 with synced lyrics from LRCLib."""
-        synced_lrc = """[00:05.00]First line of lyrics
-[00:10.00]Second line of lyrics
-[00:15.00]Third line of lyrics"""
-
-        mock_result = LyricsResult(
-            lyrics="First line of lyrics\nSecond line of lyrics\nThird line of lyrics",
-            synced_lyrics=synced_lrc,
-            source="lrclib",
-            title="Test Song",
-            artist="Test Artist",
-        )
-
-        with patch("lrcgen.cli.search_lyrics", return_value=mock_result):
-            from lrcgen.cli import process_audio_file
-
+        with patch("lrcgen.cli.search_lyrics", return_value=synced_lyrics_result):
             success = process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
@@ -135,8 +137,6 @@ class TestEndToEndWithGeniusLyrics:
 
         with patch("lrcgen.cli.search_lyrics", return_value=genius_result), \
              patch("lrcgen.cli.transcribe_audio", return_value=sample_segments):
-            from lrcgen.cli import process_audio_file
-
             success = process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
@@ -169,8 +169,6 @@ class TestEndToEndWithWhisperOnly:
         """Process MP3 with only Whisper transcription (no lyrics sources)."""
         with patch("lrcgen.cli.search_lyrics", return_value=None), \
              patch("lrcgen.cli.transcribe_audio", return_value=sample_segments):
-            from lrcgen.cli import process_audio_file
-
             success = process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
@@ -205,8 +203,6 @@ class TestEndToEndEdgeCases:
         lrc_path.write_text("[by:LRCGen]\n[00:10.00]Existing content\n")
 
         with patch("lrcgen.cli.search_lyrics") as mock_search:
-            from lrcgen.cli import process_audio_file
-
             success = process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
@@ -235,8 +231,6 @@ class TestEndToEndEdgeCases:
         )
 
         with patch("lrcgen.cli.search_lyrics", return_value=mock_result):
-            from lrcgen.cli import process_audio_file
-
             success = process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
@@ -263,8 +257,6 @@ class TestEndToEndEdgeCases:
         )
 
         with patch("lrcgen.cli.search_lyrics", return_value=mock_result):
-            from lrcgen.cli import process_audio_file
-
             success = process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
@@ -289,8 +281,6 @@ class TestEndToEndEdgeCases:
 
         with patch("lrcgen.cli.search_lyrics", return_value=genius_result), \
              patch("lrcgen.cli.transcribe_audio", return_value=[]):
-            from lrcgen.cli import process_audio_file
-
             success = process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
@@ -321,8 +311,6 @@ class TestEndToEndEdgeCases:
     def test_metadata_extraction_failure(self, tagged_mp3):
         """Handle case when metadata extraction raises an exception."""
         with patch("lrcgen.cli.extract_metadata", side_effect=Exception("Corrupt file")):
-            from lrcgen.cli import process_audio_file
-
             success = process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
@@ -341,8 +329,6 @@ class TestEndToEndEdgeCases:
         """Handle case when Whisper transcription raises an exception."""
         with patch("lrcgen.cli.search_lyrics", return_value=None), \
              patch("lrcgen.cli.transcribe_audio", side_effect=RuntimeError("Model load failed")):
-            from lrcgen.cli import process_audio_file
-
             success = process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
@@ -371,13 +357,9 @@ class TestEndToEndLRCContent:
             lyrics="Line one\nLine two\nLine three",
             synced_lyrics=synced_lrc,
             source="lrclib",
-            title="Format Test",
-            artist="Test Artist",
         )
 
         with patch("lrcgen.cli.search_lyrics", return_value=mock_result):
-            from lrcgen.cli import process_audio_file
-
             process_audio_file(
                 audio_path=tagged_mp3,
                 model_size="tiny",
