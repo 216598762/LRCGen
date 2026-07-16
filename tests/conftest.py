@@ -57,25 +57,21 @@ def sample_timestamps():
 
 
 @pytest.fixture
-def create_minimal_wav(tmp_dir):
-    """Create a minimal valid WAV file for testing.
+def create_minimal_mp3(tmp_dir):
+    """Create a minimal valid MP3 file for testing.
 
-    Returns a function that creates a WAV file with given metadata.
+    Returns a function that creates an MP3 file with given metadata.
     """
     from mutagen.mp3 import MP3
-    from mutagen.id3 import ID3, TIT2, TPE1, TALB
+    from mutagen.id3 import TIT2, TPE1, TALB
 
-    def _create_wav(
+    def _create_mp3(
         filename: str = "test.mp3",
         title: str | None = None,
         artist: str | None = None,
         album: str | None = None,
     ) -> Path:
-        """Create a minimal MP3 file with ID3 tags.
-
-        Note: We use MP3 because creating valid WAV files programmatically
-        is complex. MP3 is more common and well-supported by mutagen.
-        """
+        """Create a minimal MP3 file with ID3 tags."""
         filepath = tmp_dir / filename
 
         # Create a minimal MP3 file (silence)
@@ -103,4 +99,4 @@ def create_minimal_wav(tmp_dir):
 
         return filepath
 
-    return _create_wav
+    return _create_mp3

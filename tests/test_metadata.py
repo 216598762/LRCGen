@@ -134,9 +134,9 @@ class TestExtractMetadata:
         finally:
             tmpfile.unlink()
 
-    def test_extract_from_mp3(self, create_minimal_wav):
+    def test_extract_from_mp3(self, create_minimal_mp3):
         """Extract metadata from an MP3 file with ID3 tags."""
-        filepath = create_minimal_wav(
+        filepath = create_minimal_mp3(
             filename="tagged.mp3",
             title="My Song",
             artist="My Artist",
@@ -151,9 +151,9 @@ class TestExtractMetadata:
         assert meta.duration is not None
         assert meta.duration > 0
 
-    def test_extract_from_untagged_mp3(self, create_minimal_wav):
+    def test_extract_from_untagged_mp3(self, create_minimal_mp3):
         """Extract metadata from an MP3 file without tags."""
-        filepath = create_minimal_wav(filename="untagged.mp3")
+        filepath = create_minimal_mp3(filename="untagged.mp3")
         meta = extract_metadata(filepath)
 
         assert meta.title is None
