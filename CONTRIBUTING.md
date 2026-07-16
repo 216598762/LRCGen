@@ -143,6 +143,7 @@ pytest tests/test_metadata.py::TestExtractMetadata::test_extract_from_mp3 -v
 Example test:
 ```python
 import pytest
+from pathlib import Path
 from lrcgen.metadata import AudioMetadata
 
 def test_search_query():
