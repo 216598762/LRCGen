@@ -20,18 +20,7 @@ export HF_HOME="/path/to/cache"
 
 ## Command Line Options
 
-All command line options can be set as defaults by creating a configuration file.
-
-### pyproject.toml
-
-Add to your `pyproject.toml`:
-
-```toml
-[tool.lrcgen]
-model-size = "small"
-device = "cpu"
-recursive = true
-```
+All options are configured via command line arguments. See `lrcgen --help` for available options.
 
 ## Whisper Models
 
